@@ -30,7 +30,7 @@ Extra  [███░░░░░░░░░░]  24.6% used
 
 ## 必要環境
 
-- macOS Tahoe 26.5 で動作確認 (Windows,Linuxでも問題ないはず)
+- macOS Tahoe 26.5 で動作確認 (Windows, Linux でも動くはず)
 - Python 3 (標準ライブラリのみ. 外部パッケージ不要)
 - Claude Code にログイン済みであること
   (OAuth トークンを Keychain の `Claude Code-credentials`, なければ
