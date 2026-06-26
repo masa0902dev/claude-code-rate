@@ -1,9 +1,9 @@
 # clc - Claude Code レート残量表示 CLI
 
-`clc rate` を叩くだけで Claude Code のレート残量(5時間枠/週間枠)を表示する CLI ツールです.
+`clc rate` を叩くだけで Claude Code のレート残量(5時間枠/週間枠/追加課金枠)を表示する CLI ツールです.
 ちなみに`clc`は"Claude Code"の略.
 
-Python3.13にて外部パッケージなしで開発しました. macOS + Python3 環境で動作します.
+Python3.13にて, 外部パッケージなしで開発しました.
 
 ```sh
 ❯ clc rate
@@ -20,14 +20,16 @@ Extra  [███░░░░░░░░░░]  24.6% used
 
 ![私の環境での実際の見た目](./img-cmd.png)
 
-使用率に応じてバーが色分けされます(緑 <50%, 黄 50–80%, 赤 ≥80%).
+- 使用率に応じてバーが色分けされます(緑 <50%, 黄 50–80%, 赤 ≥80%).
+- 見た目や表示内容のカスタマイズは, コードを少し書き換えるだけで可能です.
 
 ## 注意
 短時間に何度も叩くと, すぐにAPIレートリミットに引っかかったので注意してください.
 
 ## 必要環境
 
-- macOS + Python 3 (標準ライブラリのみ. 外部パッケージ不要)
+- macOS Tahoe 26.5 で動作確認 (Windows,Linuxでも問題ないはず)
+- Python 3 (標準ライブラリのみ. 外部パッケージ不要)
 - Claude Code にログイン済みであること
   (OAuth トークンを Keychain の `Claude Code-credentials`, なければ
   `~/.claude/.credentials.json` から読み取ります)
