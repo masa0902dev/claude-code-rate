@@ -19,19 +19,43 @@ from datetime import datetime, timezone
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 KEYCHAIN_SERVICE = "Claude Code-credentials"
 CREDENTIALS_PATH = os.path.expanduser("~/.claude/.credentials.json")
-BAR_WIDTH = 13
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
-# API が返すウィンドウ名 -> 表示ラベル(未知のキーはそのまま表示する)
-WINDOW_LABELS = {
-    "five_hour": "5Hours",
-    "seven_day": "Weekly",
-    "seven_day_opus": "Weekly(Opus)",
-    "seven_day_sonnet": "Weekly(Sonnet)",
-    "seven_day_oauth_apps": "Weekly(OAuth Apps)",
-    "extra_usage": "Extra",
+_DEFAULTS = {
+    "bar_width": 13,
+    "label_width": 7,
+    "monthly_limit_usd": 10.0,
+    "color_warn_threshold": 50,
+    "color_danger_threshold": 80,
+    "window_labels": {
+        "five_hour": "5Hours",
+        "seven_day": "Weekly",
+        "seven_day_opus": "Weekly(Opus)",
+        "seven_day_sonnet": "Weekly(Sonnet)",
+        "seven_day_oauth_apps": "Weekly(OAuth Apps)",
+        "extra_usage": "Extra",
+    },
+    "window_order": [
+        "five_hour",
+        "seven_day",
+        "seven_day_opus",
+        "seven_day_sonnet",
+        "seven_day_oauth_apps",
+        "extra_usage",
+    ],
 }
-WINDOW_ORDER = ["five_hour", "seven_day", "seven_day_opus", "seven_day_sonnet"]
-MONTHLY_LIMIT = 10.0  # USD, extra_usage の月間制限額
+
+
+def _load_config():
+    cfg = dict(_DEFAULTS)
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, encoding="utf-8") as f:
+            overrides = json.load(f)
+        cfg.update(overrides)
+    return cfg
+
+
+_CFG = _load_config()
 
 
 class ClcError(Exception):
@@ -153,9 +177,9 @@ def pad_display(text, width):
 def colorize(text, utilization, use_color):
     if not use_color:
         return text
-    if utilization >= 80:
+    if utilization >= _CFG["color_danger_threshold"]:
         code = "31"  # 赤
-    elif utilization >= 50:
+    elif utilization >= _CFG["color_warn_threshold"]:
         code = "33"  # 黄
     else:
         code = "32"  # 緑
@@ -163,31 +187,28 @@ def colorize(text, utilization, use_color):
 
 
 def render_window(key, data, use_color):
-    label = WINDOW_LABELS.get(key, key)
+    label = _CFG["window_labels"].get(key, key)
     utilization = data.get("utilization")
     if utilization is None:
         return None
 
     utilization = float(utilization)
-    filled = round(BAR_WIDTH * min(utilization, 100) / 100)
-    bar = "█" * filled + "░" * (BAR_WIDTH - filled)
+    bar_width = _CFG["bar_width"]
+    filled = round(bar_width * min(utilization, 100) / 100)
+    bar = "█" * filled + "░" * (bar_width - filled)
     bar = colorize(bar, utilization, use_color)
-    remaining_pct = max(0.0, 100.0 - utilization)
 
-    label_width = 7
-    lines = [f"{pad_display(label, label_width)}[{bar}] {(utilization):5.1f}% used"]
+    label_width = _CFG["label_width"]
+    lines = [f"{pad_display(label, label_width)}[{bar}] {utilization:5.1f}% used"]
     resets = parse_resets_at(data.get("resets_at"))
 
     if resets:
-        lines.append(
-            f"{' ' * label_width}resets in {format_remaining(resets)}"
-        )
+        lines.append(f"{' ' * label_width}resets in {format_remaining(resets)}")
     elif key == "extra_usage":
-        # extra_usage の場合、使用金額を表示する
-        used_amount = (utilization / 100.0) * MONTHLY_LIMIT
-        remaining_amount = max(0.0, MONTHLY_LIMIT - used_amount)
+        monthly_limit = _CFG["monthly_limit_usd"]
+        used_amount = (utilization / 100.0) * monthly_limit
         lines.append(f"{' ' * label_width}used ${used_amount:.2f}")
-    
+
     return "\n".join(lines)
 
 
@@ -201,8 +222,9 @@ def cmd_rate(args):
 
     use_color = sys.stdout.isatty()
     windows = {k: v for k, v in usage.items() if isinstance(v, dict) and "utilization" in v}
-    ordered = [k for k in WINDOW_ORDER if k in windows]
-    ordered += sorted(k for k in windows if k not in WINDOW_ORDER)
+    window_order = _CFG["window_order"]
+    ordered = [k for k in window_order if k in windows]
+    ordered += sorted(k for k in windows if k not in window_order)
 
     # print(f"Claude Code rate remaining:")
     if not ordered:
