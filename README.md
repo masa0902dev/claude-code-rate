@@ -51,7 +51,12 @@ echo "alias clc='$(pwd)/clc'" >> ~/.zshrc && source ~/.zshrc
 ```sh
 clc rate          # レート残量を表示
 clc rate --json   # API の生レスポンスを JSON で表示
-watch -n 60 clc rate   # 常時表示したい場合
+```
+
+常時表示したい場合 (macOS)
+```sh
+brew install watch
+watch -n 60 clc rate  # 60秒ごとにレート残量を表示
 ```
 
 ## エラーになる場合
