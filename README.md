@@ -7,20 +7,7 @@ Zenn記事: https://zenn.dev/masa0902dev/articles/clc-claude-code-rate
 
 Python3.13にて, 外部パッケージなしで開発しました.
 
-```sh
-❯ clc rate
-5Hours [██░░░░░░░░░░░]  17.0% used
-       resets in 01h59m
-
-Weekly [█░░░░░░░░░░░░]   4.0% used
-       resets in 6d,39m
-
-Extra  [███░░░░░░░░░░]  24.6% used
-       used $2.46
-
-```
 <img src="./img-cmd.png" width="400" alt="私の環境での実際の見た目">
-
 
 - 使用率に応じてバーが色分けされます.
 - 見た目や表示内容のカスタマイズは, `config.json` を編集するだけで可能です.
